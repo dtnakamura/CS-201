@@ -3,12 +3,68 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h>
-#include <time.h>
 #include "treeNode.h"
 #include "queue.h"
 
 int vFlag = 0;
 int dFlag = 0;
+char *Name = 0;
+
+/*** ProcessOptions function borrowed from options.c by Dr. John Lusth, University of Alabama CS Department ***/
+int ProcessOptions(int argc, char **argv)
+{
+    int argIndex;
+    int argUsed;
+    int separateArg;
+    char *arg;
+
+    argIndex = 1;
+
+    while (argIndex < argc && *argv[argIndex])
+        {
+            //if (argIndex < argc && *argv[argIndex] == '-')
+            //{
+                if (argv[argIndex][1] == '\0') 
+                    return argIndex;
+
+                separateArg = 0;
+                argUsed = 0;
+
+                if (argv[argIndex][2] == '\0')
+                    {
+                        arg = argv[argIndex+1];
+                        separateArg = 1;
+                    }
+                else
+                    arg = argv[argIndex]+2;
+
+                if (*argv[argIndex] == '-')
+                {
+                    switch (argv[argIndex][1])
+                        {
+                            case 'd':
+                                dFlag = 1;
+                                break;
+                            case 'v':
+                                vFlag = 1;
+                                break;
+                            default:
+                                printf("option %s not understood\n",argv[argIndex]);
+                        }
+                }
+                else
+                {
+                    arg = argv[argIndex];
+                    Name = strdup(arg);
+                }
+            if (separateArg && argUsed)
+                    ++argIndex;
+
+                ++argIndex;
+        }
+                
+    return argIndex;
+}
 
 // A utility function to check if a tree node has both 
 // left and right children
@@ -91,79 +147,35 @@ void maxHeapify(struct treeNode *n)
     }
 }
 
-int
-ProcessOptions(int argc, char **argv)
+void minHeapify(struct treeNode *n)
 {
-    int argIndex;
-    int argUsed;
-    int separateArg;
-    char *arg;
+    int temp;
+    treeNode *smallest;
+    // If left > data AND left > right, replace data with left
+    if ((n->left) && (n->left->key < n->key))
+        smallest = n->left;
+    else
+        smallest = n;
+         
+    // If right > data AND right > left, replace data with right
+    if ((n->right) && (n->right->key < smallest->key))
+        smallest = n->right;
 
-    argIndex = 1;
-
-    while (argIndex < argc && *argv[argIndex] == '-')
-        {
-            /* check if stdin, represented by "-" is an argument */
-            /* if so, the end of options has been reached */
-            if (argv[argIndex][1] == '\0') return argIndex;
-
-            separateArg = 0;
-            argUsed = 0;
-
-            if (argv[argIndex][2] == '\0')
-                {
-                    arg = argv[argIndex+1];
-                    separateArg = 1;
-                }
-            else
-                arg = argv[argIndex]+2;
-
-            switch (argv[argIndex][1])
-                {
-                    /*
-                    * when option has an argument, do this
-                    *
-                    * examples are -m4096 or -m 4096
-                    *
-                    *   case 'm':
-                    *   MemorySize = atol(arg);
-                    *   argUsed = 1;
-                    *   break;
-                    *
-                    *
-                    * when option does not have an argument, do this
-                    *
-                    *   example is -a
-                    *
-                    *   case 'a':
-                    *       PrintActions = 1;
-                    *       break;
-                    */
-
-                    case 'd':
-                        dFlag = 1;
-                        break;
-                    case 'v':
-                        vFlag = 1;
-                        break;
-                    default:
-                        printf("option %s not understood\n",argv[argIndex]);
-                }
-
-            if (separateArg && argUsed)
-                ++argIndex;
-
-            ++argIndex;
-            }
-
-    return argIndex;
+    // If smallest != n do the swap-y thing
+    if (smallest != n)
+    {
+        temp = n->key;
+        n->key = smallest->key;
+        smallest->key = temp;
+        minHeapify(smallest);
+    }
 }
+
            
 // And finally, our main function
 int main(int argc, char **argv)
 {
-    clock_t t;
-    t = clock();
+    int argIndex = 0;
     int readInts = 0;
     struct treeNode *temp = NULL;
     struct treeNode *n = NULL;
@@ -172,8 +184,18 @@ int main(int argc, char **argv)
     struct Queue *stack = createQueue();
     FILE *fp;
 
+    argIndex = ProcessOptions(argc, argv);
+    printf("dFlag is %d\n", dFlag);
+    printf("vFlag is %d\n", vFlag);
+    if (Name != NULL)
+        printf("inFile is %s\n", Name);
+    else
+    {
+        printf("you forgot to add a file name\n");
+        return 0;
+    }
     // FILE I/O for integers goes here
-    fp = fopen(argv[1],"r");
+    fp = fopen(Name,"r");
     if (fp == NULL)
     {
         printf("NO SUCH FILE EXISTS. PLEASE TRY AGAIN.");
@@ -187,43 +209,78 @@ int main(int argc, char **argv)
     }
     fclose(fp);
 
-    while (queue->size > 0)
+    if (dFlag == 1)
     {
-        temp = removeFront(queue);
-        addBack(stack, temp);
-    }
-
-    while (stack->size > 0)
-    {
-        temp = removeBack(stack);
-        maxHeapify(temp);
-        addBack(queue, temp);
-    }
-
-    while (queue->size > 0)
-    {
-        //printf("%d\n", root->key);
-        treeNode *backNode = removeFront(queue);
-        root->key = backNode->key;
-        if (backNode->parent != NULL)
+        while (queue->size > 0)
         {
-            if (backNode->parent->left == backNode)
-            {
-                backNode->parent->left = NULL;
-            }
-            else
-            {
-                backNode->parent->right = NULL;
-            }
+            temp = removeFront(queue);
+            addBack(stack, temp);
         }
-        free(backNode);
-        maxHeapify(root);
+
+        while (stack->size > 0)
+        {
+            temp = removeBack(stack);
+            maxHeapify(temp);
+            addBack(queue, temp);
+        }
+
+        while (queue->size > 0)
+        {
+            printf("%d ", root->key);
+            treeNode *backNode = removeFront(queue);
+            root->key = backNode->key;
+            if (backNode->parent != NULL)
+            {
+                if (backNode->parent->left == backNode)
+                {
+                    backNode->parent->left = NULL;
+                }
+                else
+                {
+                    backNode->parent->right = NULL;
+                }
+            }
+            free(backNode);
+            maxHeapify(root);
+        }
+        printf("\n");
     }
-    t = clock() - t;
-    // timeTaken has units of seconds
-    double timeTaken = t/CLOCKS_PER_SEC;  
-    printf("CLOCKS_PER_SEC = %f\n", CLOCKS_PER_SEC);
-    printf("Project took %f seconds.\n", timeTaken);
+    else
+    {
+        while (queue->size > 0)
+        {
+            temp = removeFront(queue);
+            addBack(stack, temp);
+        }
+
+        while (stack->size > 0)
+        {
+            temp = removeBack(stack);
+            minHeapify(temp);
+            addBack(queue, temp);
+        }
+
+        while (queue->size > 0)
+        {
+            printf("%d ", root->key);
+            treeNode *backNode = removeFront(queue);
+            root->key = backNode->key;
+            if (backNode->parent != NULL)
+            {
+                if (backNode->parent->left == backNode)
+                {
+                    backNode->parent->left = NULL;
+                }
+                else
+                {
+                    backNode->parent->right = NULL;
+                }
+            }
+            free(backNode);
+            minHeapify(root);
+        }
+        printf("\n");
+    }
         
     return 0;
 }
