@@ -17,17 +17,3 @@ treeNode *newIntNode(int val)
     p->right = NULL;
     return p;
 }
-
-/********** private methods **********/
-/*
-static treeNode *makeNewNode()
-{
-    treeNode *n = (treeNode *)malloc(sizeof(treeNode));
-    if (n == 0)
-    {
-        fprintf(stderr, "out of memory");
-        exit(-1);
-    }
-    return n;
-}
-*/

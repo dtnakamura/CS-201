@@ -1,7 +1,7 @@
 #ifndef queue_h 
 #define queue_h 
 
-#include "treenode.h"
+#include "treeNode.h"
 
 // creates node which has treeNode as payload and has left and right pointers
 // FOR LINKED LISTS ONLY!!!
@@ -25,5 +25,6 @@ extern void addBack(Queue *q, treeNode * node);
 extern treeNode *removeFront(Queue *q);
 extern treeNode *removeBack(Queue *q);
 extern void destroy(Queue *q);
+extern void printQueue(Queue *q);
 
 #endif

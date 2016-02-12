@@ -70,4 +70,5 @@ int main(int argc, char **argv)
     {
         printf("Removed %d from back of queue.\n", (int)removeBack(t)->key);
     }
+	return 0;
 }

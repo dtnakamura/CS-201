@@ -1,153 +1,14 @@
 // Program for linked implementation of binary tree
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+#include <string.h>
+#include <time.h>
 #include "treeNode.h"
 #include "queue.h"
 
-/* DON'T NEED
-// Queue size
-int SIZE = 5;
-*/
-
-/* DON'T NEED
-// A tree node
-struct node
-{
-    int data;
-    struct node *right;
-    struct node *left;
-};
-*/
-
-/* DON'T THINK I NEED
-// A queue node
-struct Queue
-{
-    // pointer to the head
-    // queue is circular so tail is head->left
-    struct node * head;
-    // number of elements in the queue
-    int size;
-};
-*/
-
-/* DON'T THINK I NEED
-// A utility function to create a new tree node
-struct treeNode *newIntNode(int data)
-{
-    struct treeNode *temp = (struct treeNode*)malloc(sizeof(struct treeNode));
-    temp->data = data;
-    temp->left = NULL;
-    temp->right = NULL;
-    return temp;
-}
-*/
-
-/*
- * IMPORTANT THINGS TO REMEMBER:
- * count 4 pointer reassignments for every insertion
- * count 2 pointers and a free() for deletions
- * always check for null on delete
- *  * make sure you check boundaries before you delete
- *   - always let delete succeed and segfault if empty
- *   - return garbage (0) if empty
- */
-
-/* DON'T THINK I NEED
-// A utility function to create a new Queue
-// don't need a size
-struct Queue *createQueue(int size)
-{
-    // malloc the queue struct
-    struct Queue *queue = (struct Queue*)malloc(sizeof(struct Queue));
-    // set the head pointer. NULL if nothing
-    queue->front = -1;
-    queue->rear = -1;
-    queue->size = size;
-    queue->array = (struct treeNode**)malloc
-        (queue->size * sizeof(struct treeNode*));
-
-    for (int i = 0; i < size; ++i)
-        queue->array[i] = NULL;
-    return queue;
-}
-*/
-
-/* DON'T THINK I NEED
-// Standard queue functions
-int queueIsEmpty(struct Queue *queue)
-{
-    return queue->front == -1;
-}
-
-int queueIsFull(struct Queue *queue)
-{
-    return queue->rear == queue->size - 1;
-}
-
-int queueHasOnlyOneItem(struct Queue *queue)
-{
-    return queue->front == queue->rear;
-}
-
-void enqueue(struct treeNode*root, struct Queue *queue)
-{
-    if (queueIsFull(queue))
-    {
-        SIZE *= 2;
-        struct Queue *newQueue = createQueue(SIZE);
-        newQueue->front = queue->front;
-        newQueue->rear = queue->rear;
-        for (int i = 0; i <= newQueue->size; ++i)
-        {
-            newQueue->array[i] = queue->array[i];
-        }
-        printf("Created new queue of size %d.\n", SIZE);
-        //printf("newQueue-> front = %d, queue->front = %d\n", newQueue->front, queue->front);
-        //printf("newQueue-> rear = %d, queue->rear = %d\n", newQueue->rear, queue->rear);
-        return;
-    }
-    //printf("Adding item %d to existing queue.\n", root->data);
-    queue->array[++queue->rear] = root;
-    if (queueIsEmpty(queue))
-        ++queue->front;
-}
-
-struct treeNode *removeFromFront(struct Queue *queue)
-{
-    if (queueIsEmpty(queue))
-        return NULL;
-    struct treeNode *temp = queue->array[queue->front];
-    if (queueHasOnlyOneItem(queue))
-    {
-        queue->front = -1;
-        queue->rear = -1;
-    }
-    else
-        ++queue->front;
-    return temp;
-}
-
-struct treeNode *removeFromRear(struct Queue *queue)
-{
-    if (queueIsEmpty(queue))
-        return NULL;
-    struct treeNode *temp = queue->array[queue->rear];
-    if (queueHasOnlyOneItem(queue))
-    {
-        queue->front = -1;
-        queue->rear = -1;
-    }
-    else
-        --queue->rear;
-    return temp;
-}
-
-struct treeNode *getFront(struct Queue *queue)
-{
-    return queue->array[queue->front];
-}
-*/
+int vFlag = 0;
+int dFlag = 0;
 
 // A utility function to check if a tree node has both 
 // left and right children
@@ -157,12 +18,12 @@ int hasBothChildren(struct treeNode *temp)
 }
 
 // Function to insert a new node in complete binary tree
-void treeInsert(treeNode *n, struct Queue *q)
+void treeInsert(struct Queue *q, treeNode *n, struct Queue *stack)
 {
     // If the tree is empty, initialize the root with a new node
     if (q->size == 0)
     {
-        q->head->data = n;
+        addBack(q, n);
     }
     else
     {
@@ -175,6 +36,9 @@ void treeInsert(treeNode *n, struct Queue *q)
         {
             front->left = n;
             n->parent = front;
+            addBack(q, front->left);
+            addFront(q, front);
+            //printf("added left child\n");
         }
         // If the right child of this front node doesn't exist;
         // set the right child as the new node
@@ -182,28 +46,19 @@ void treeInsert(treeNode *n, struct Queue *q)
         {
             front->right = n;
             n->parent = front;
-        }
-        // If the front node has both children, dequeue it
-        if (hasBothChildren(front))
-        {
-            struct treeNode *temp = NULL;
-            temp = removeFront(q);
+            addBack(q, front->right);
+            addBack(stack, front);
+            //printf("added right child\n");
         }
     }
-    
-    // Enqueue the new node for later insertions
-    addBack(q, n);
 }
 
-// Standard level-order traversal to test
-void levelOrder(struct treeNode *root)
+// Level-order traversal to test
+void levelOrder(struct Queue *q)
 {
-    struct Queue *q = createQueue();
-    addBack(q, root);
     while (q->size > 0)
     {
-        struct treeNode *temp = removeFront(q);
-        printf("%d\n", temp->key);
+        struct treeNode *temp = removeBack(q);
         if (temp->left)
             addBack(q, temp->left);
         if (temp->right)
@@ -211,45 +66,164 @@ void levelOrder(struct treeNode *root)
     }
 }
 
-/*
 // Heap things go here
-void maxHeapify(struct treeNode *root)
+void maxHeapify(struct treeNode *n)
 {
-    struct Queue *queue = createQueue();
-    addFront(queue, root);
-    while (queue->size > 0)
+    int temp;
+    treeNode *largest;
+    // If left > data AND left > right, replace data with left
+    if ((n->left) && (n->left->key > n->key))
+        largest = n->left;
+    else
+        largest = n;
+         
+    // If right > data AND right > left, replace data with right
+    if ((n->right) && (n->right->key > largest->key))
+        largest = n->right;
+
+    // If largest != n do the swap-y thing
+    if (largest != n)
     {
-        struct treeNode *temp = removeFront(queue);
-        //printf("Dequeue'd node->data: %d\n",temp->data);
-        // If left > data AND left > right, replace data with left
-        
-        // If right > data AND right > left, replace data with right
+        temp = n->key;
+        n->key = largest->key;
+        largest->key = temp;
+        maxHeapify(largest);
     }
 }
-*/
-            
+
+int
+ProcessOptions(int argc, char **argv)
+{
+    int argIndex;
+    int argUsed;
+    int separateArg;
+    char *arg;
+
+    argIndex = 1;
+
+    while (argIndex < argc && *argv[argIndex] == '-')
+        {
+            /* check if stdin, represented by "-" is an argument */
+            /* if so, the end of options has been reached */
+            if (argv[argIndex][1] == '\0') return argIndex;
+
+            separateArg = 0;
+            argUsed = 0;
+
+            if (argv[argIndex][2] == '\0')
+                {
+                    arg = argv[argIndex+1];
+                    separateArg = 1;
+                }
+            else
+                arg = argv[argIndex]+2;
+
+            switch (argv[argIndex][1])
+                {
+                    /*
+                    * when option has an argument, do this
+                    *
+                    * examples are -m4096 or -m 4096
+                    *
+                    *   case 'm':
+                    *   MemorySize = atol(arg);
+                    *   argUsed = 1;
+                    *   break;
+                    *
+                    *
+                    * when option does not have an argument, do this
+                    *
+                    *   example is -a
+                    *
+                    *   case 'a':
+                    *       PrintActions = 1;
+                    *       break;
+                    */
+
+                    case 'd':
+                        dFlag = 1;
+                        break;
+                    case 'v':
+                        vFlag = 1;
+                        break;
+                    default:
+                        printf("option %s not understood\n",argv[argIndex]);
+                }
+
+            if (separateArg && argUsed)
+                ++argIndex;
+
+            ++argIndex;
+            }
+
+    return argIndex;
+}
+           
 // And finally, our main function
 int main(int argc, char **argv)
 {
-    int readInts;
-    struct treeNode *root = NULL;
+    clock_t t;
+    t = clock();
+    int readInts = 0;
+    struct treeNode *temp = NULL;
     struct treeNode *n = NULL;
+    struct treeNode *root = NULL;
     struct Queue *queue = createQueue();
+    struct Queue *stack = createQueue();
     FILE *fp;
 
+    // FILE I/O for integers goes here
     fp = fopen(argv[1],"r");
     if (fp == NULL)
-        printf("NO SUCH FILE EXISTS. PLEASE TRY AGAIN.");
-    while (fscanf(fp, "%d", &readInts) != EOF)
     {
-        n->key = readInts;
-        printf("Inserting %d into tree...\n", n->key);
-        treeInsert(n, queue);
+        printf("NO SUCH FILE EXISTS. PLEASE TRY AGAIN.");
+    }
+    while (fscanf(fp, "%d\n", &readInts) != EOF)
+    {
+        n = newIntNode(readInts);
+        if (root == NULL)
+            root = n;
+        treeInsert(queue, n, stack);
     }
     fclose(fp);
 
-    //maxHeapify(root);
-    levelOrder(root);
+    while (queue->size > 0)
+    {
+        temp = removeFront(queue);
+        addBack(stack, temp);
+    }
 
+    while (stack->size > 0)
+    {
+        temp = removeBack(stack);
+        maxHeapify(temp);
+        addBack(queue, temp);
+    }
+
+    while (queue->size > 0)
+    {
+        //printf("%d\n", root->key);
+        treeNode *backNode = removeFront(queue);
+        root->key = backNode->key;
+        if (backNode->parent != NULL)
+        {
+            if (backNode->parent->left == backNode)
+            {
+                backNode->parent->left = NULL;
+            }
+            else
+            {
+                backNode->parent->right = NULL;
+            }
+        }
+        free(backNode);
+        maxHeapify(root);
+    }
+    t = clock() - t;
+    // timeTaken has units of seconds
+    double timeTaken = t/CLOCKS_PER_SEC;  
+    printf("CLOCKS_PER_SEC = %f\n", CLOCKS_PER_SEC);
+    printf("Project took %f seconds.\n", timeTaken);
+        
     return 0;
 }

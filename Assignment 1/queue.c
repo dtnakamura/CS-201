@@ -101,3 +101,15 @@ extern void destroy(Queue *q)
 {
     free(q);
 }
+
+void printQueue(Queue *q)
+{
+    struct node *n = q->head;
+    int i;
+    for (i = 0; i < q->size; i++)
+    {
+        printf("%d ",n->data->key);
+        n = n->right;
+    }
+    printf("\n");
+}
