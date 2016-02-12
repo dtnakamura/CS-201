@@ -1,0 +1,7 @@
+want to use binary tree to store heap, and cannot use array, so:
+    read in args and insert nodes into tree as priority queue
+    run heapify after each insert so queue is in order
+    once tree is complete, pop off root and form queue
+        inserting things @ back takes constant time w/ tail pointer
+        removing and printing from front takes constant time b/c just need to move head pointer to next item in stack
+     
