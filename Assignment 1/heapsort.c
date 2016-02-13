@@ -65,6 +65,22 @@ int ProcessOptions(int argc, char **argv)
     return argIndex;
 }
 
+void explanation(void)
+{
+    printf("Author: Dan Nakamura\n");
+    printf("Program requirements: To run heapsort algorithm without using an array to store the heap. This program must run as efficiently as an array-based heap.\n\n");
+    printf("Program runtimes for various input file sizes:\n");
+    printf("|n        |t (sec)  |\n");
+    printf("|10       |0.001278 |\n");
+    printf("|100      |0.001397 |\n");
+    printf("|1000     |0.009755 |\n");
+    printf("|10000    |0.107154 |\n");
+    printf("|100000   |1.087882 |\n");
+    printf("|1000000  |10.972974|\n");
+    printf("\nDetailed explanation: When plotted, this time vs. size curve yields a linear plot. This is indicative of O(nlogn) performance because the tests featured the sample size growing by a factor of 10 each time.\n");
+    printf("\nTest methodology: the heapsort program was run on varying file sizes in both ascending and descending order with and without screen output. The times shown above are an average of the ascending and descending sort times with the screen output on. Times without screen output were faster by an (approximate) factor of 10.\n");
+}
+
 // A utility function to check if a tree node has both 
 // left and right children
 int hasBothChildren(struct treeNode *temp)
@@ -182,6 +198,11 @@ int main(int argc, char **argv)
     FILE *fp;
 
     argIndex = ProcessOptions(argc, argv);
+    if (vFlag)
+    {
+        explanation();
+        exit(-1);
+    }
     if (Name == NULL)
     {
         printf("you forgot to add a file name\n");
