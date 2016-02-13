@@ -22,45 +22,44 @@ int ProcessOptions(int argc, char **argv)
 
     while (argIndex < argc && *argv[argIndex])
         {
-            //if (argIndex < argc && *argv[argIndex] == '-')
-            //{
-                if (argv[argIndex][1] == '\0') 
-                    return argIndex;
+            if (argv[argIndex][1] == '\0') 
+                return argIndex;
 
-                separateArg = 0;
-                argUsed = 0;
+            separateArg = 0;
+            argUsed = 0;
 
-                if (argv[argIndex][2] == '\0')
+            if (argv[argIndex][2] == '\0')
+            {
+                arg = argv[argIndex+1];
+                separateArg = 1;
+            }
+            else
+                arg = argv[argIndex]+2;
+
+            if (*argv[argIndex] == '-')
+            {
+                switch (argv[argIndex][1])
                     {
-                        arg = argv[argIndex+1];
-                        separateArg = 1;
+                        case 'd':
+                            dFlag = 1;
+                            break;
+                        case 'v':
+                            vFlag = 1;
+                            break;
+                        default:
+                            printf("option %s not understood\n",argv[argIndex]);
                     }
-                else
-                    arg = argv[argIndex]+2;
+            }
+            else
+            {
+                arg = argv[argIndex];
+                Name = strdup(arg);
+            }
 
-                if (*argv[argIndex] == '-')
-                {
-                    switch (argv[argIndex][1])
-                        {
-                            case 'd':
-                                dFlag = 1;
-                                break;
-                            case 'v':
-                                vFlag = 1;
-                                break;
-                            default:
-                                printf("option %s not understood\n",argv[argIndex]);
-                        }
-                }
-                else
-                {
-                    arg = argv[argIndex];
-                    Name = strdup(arg);
-                }
             if (separateArg && argUsed)
-                    ++argIndex;
-
                 ++argIndex;
+
+            ++argIndex;
         }
                 
     return argIndex;
@@ -94,7 +93,6 @@ void treeInsert(struct Queue *q, treeNode *n, struct Queue *stack)
             n->parent = front;
             addBack(q, front->left);
             addFront(q, front);
-            //printf("added left child\n");
         }
         // If the right child of this front node doesn't exist;
         // set the right child as the new node
@@ -104,7 +102,6 @@ void treeInsert(struct Queue *q, treeNode *n, struct Queue *stack)
             n->parent = front;
             addBack(q, front->right);
             addBack(stack, front);
-            //printf("added right child\n");
         }
     }
 }
@@ -185,14 +182,10 @@ int main(int argc, char **argv)
     FILE *fp;
 
     argIndex = ProcessOptions(argc, argv);
-    printf("dFlag is %d\n", dFlag);
-    printf("vFlag is %d\n", vFlag);
-    if (Name != NULL)
-        printf("inFile is %s\n", Name);
-    else
+    if (Name == NULL)
     {
         printf("you forgot to add a file name\n");
-        return 0;
+        exit(-1);
     }
     // FILE I/O for integers goes here
     fp = fopen(Name,"r");
@@ -208,8 +201,9 @@ int main(int argc, char **argv)
         treeInsert(queue, n, stack);
     }
     fclose(fp);
+    // End file I/O
 
-    if (dFlag == 1)
+    if (dFlag == 1) // Sort things in descending order
     {
         while (queue->size > 0)
         {
@@ -245,7 +239,7 @@ int main(int argc, char **argv)
         }
         printf("\n");
     }
-    else
+    else // Sort things in ascending order
     {
         while (queue->size > 0)
         {
