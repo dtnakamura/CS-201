@@ -239,6 +239,7 @@ int main(int argc, char **argv)
             addBack(queue, temp);
         }
 
+        // Reverse level-order traversal
         while (queue->size > 0)
         {
             printf("%d ", root->key);
@@ -275,6 +276,7 @@ int main(int argc, char **argv)
             addBack(queue, temp);
         }
 
+        // Reverse level-order traversal
         while (queue->size > 0)
         {
             printf("%d ", root->key);
