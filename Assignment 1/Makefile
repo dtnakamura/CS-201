@@ -7,9 +7,6 @@ clean:
 	rm -f *.o
 	rm heapsort
 
-run: heapsort
-	./heapsort integers
-
 heap: heapsort.c queue.o treeNode.o
 	gcc -Wall -g -c -o heapsort.o heapsort.c
 queue: queue.c treeNode.o
